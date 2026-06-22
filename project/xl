@@ -1,0 +1,159 @@
+import pandas as pd
+# df = pd.read_csv(r"C:\Users\zakha\Downloads\salse.csv")
+# df.to_excel("salse.xlsx", index= False)
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import silhouette_score,  davies_bouldin_score, calinski_harabasz_score
+import seaborn as sns
+from sklearn.cluster import KMeans
+data = pd.read_csv(r"C:\Users\zakha\Downloads\salse.csv", header=0)
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.mixture import GaussianMixture
+
+
+
+all_sums = np.sum(data, axis = 0)
+
+
+from scipy.stats import skew, normaltest
+
+def distribution_report(series):
+    x = pd.to_numeric(series, errors="coerce").dropna()
+
+    result = {
+        "mean": x.mean(),
+        "median": x.median(),
+        "std": x.std(),
+        "skewness": skew(x),
+        "normal_p": normaltest(x).pvalue,
+        "q25": x.quantile(0.25),
+        "q50": x.quantile(0.50),
+        "q75": x.quantile(0.75),
+        "q90": x.quantile(0.90),
+        "q95": x.quantile(0.95),
+        "q99": x.quantile(0.99),
+    }
+
+    if (x > 0).all():
+        log_x = np.log(x)
+        result["log_skewness"] = skew(log_x)
+        result["lognormal_p"] = normaltest(log_x).pvalue
+    else:
+        result["log_skewness"] = np.nan
+        result["lognormal_p"] = np.nan
+
+    return pd.Series(result)
+
+
+
+
+features = ["Recency", "Monetary", "Frequency"]
+
+def clusterisation(d):
+    d = d.dropna()
+
+
+    X = d[features].copy()
+
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    kmeans = KMeans(
+        n_clusters=5,
+        random_state=42,
+        n_init=50
+    )
+
+    labels = kmeans.fit_predict(X_scaled)
+
+    result = d.copy()
+    result["Cluster"] = labels
+
+
+    return result, X_scaled, kmeans
+
+data_for_clusters = pd.DataFrame(columns=['Recency', 'Monetary', 'Frequency'])
+
+data_T = data.T
+
+data_for_clusters = pd.DataFrame({
+    "Recency": (
+        data_T.loc["DAYSSINCELASTORDER"] /
+        data_T.loc["AVGDAYSBETWEENORDERS"].replace(0, np.nan)
+    ),
+    "Monetary": (
+        data_T.loc["REVENUE"] /
+        data_T.loc["TOTAL_ORDERS"].replace(0, np.nan)
+    ),
+    "Frequency": data_T.loc["TOTAL_ORDERS"]
+})
+
+
+def heatmap(d):
+    d = pd.DataFrame(d.iloc[2::])
+    X_only_numbers = d.select_dtypes(include=["number"])
+
+# 1. Считаем матрицу корреляции (по умолчанию используется корреляция Пирсона)
+    columns_to_drop = ["CustomerID", "index", "DAYSSINCELASTORDER"]
+    X_only_numbers = X_only_numbers.drop(
+        columns=[col for col in columns_to_drop if col in X_only_numbers.columns]
+    )
+    corr_matrix = X_only_numbers.corr()
+
+# 2. Настраиваем размер графика (подбери под количество своих колонок)
+    plt.figure(figsize=(30,30 ))
+
+# 3. Рисуем тепловую карту
+    sns.heatmap(
+        corr_matrix,
+        annot=False,  # Включает отображение цифр внутри ячеек
+        fmt=".2f",  # Округляет цифры до 2 знаков после запятой
+        cmap="coolwarm",  # Цветовая схема (синий — негативная связь, красный — позитивная)
+        vmin=-1,
+        vmax=1,  # Границы шкалы от -1 до 1
+        linewidths=0.5,  # Тонкие линии между ячейками для аккуратности
+    )
+
+# 4. Настройка заголовка
+    plt.title("Матрица корреляции признаков", fontsize=16)
+    plt.tight_layout()  # Чтобы названия колонок не влезали за края графика
+    plt.show()
+
+
+#report = pd.DataFrame({
+    # col: distribution_report(data[col])
+    # for col in data.select_dtypes(include=np.number).columns}).T
+
+#print(report)
+
+
+
+print(clusterisation(data_for_clusters))
+
+
+result, X_scaled, model = clusterisation(data_for_clusters)
+
+print(result["Cluster"].value_counts().sort_index())
+
+cluster_profile = (
+    result
+    .groupby("Cluster")[features]
+    .mean()
+    .round(2)
+)
+
+score1 = silhouette_score(X_scaled, result["Cluster"])
+ch_score = calinski_harabasz_score(X_scaled, result["Cluster"])
+db_score = davies_bouldin_score(X_scaled, result["Cluster"])
+
+
+print(f"Silhouette Score = {score1:.3f}")
+print(f"ch_score = {ch_score}")
+print(f"silhouette_score = {db_score}")
+
+
+
+print(cluster_profile)
+
+
