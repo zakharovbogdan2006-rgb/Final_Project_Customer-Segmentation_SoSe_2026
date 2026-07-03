@@ -44,10 +44,6 @@ def distribution_report(series):
         result["lognormal_p"] = np.nan
 
     return pd.Series(result)
-
-
-
-
 features = ["Recency", "Monetary", "Frequency"]
 
 def clusterisation(d):
@@ -60,7 +56,7 @@ def clusterisation(d):
     X_scaled = scaler.fit_transform(X)
 
     kmeans = KMeans(
-        n_clusters=5,
+        n_clusters=4,
         random_state=42,
         n_init=50
     )
@@ -72,23 +68,34 @@ def clusterisation(d):
 
 
     return result, X_scaled, kmeans
+    
+def prep_clust(data):
 
-data_for_clusters = pd.DataFrame(columns=['Recency', 'Monetary', 'Frequency'])
+    data_T = data.T
 
-data_T = data.T
+    days_since = pd.to_numeric(data_T.loc["DAYSSINCELASTORDER"], errors="coerce")
+    revenue = pd.to_numeric(data_T.loc["REVENUE"], errors="coerce")
+    frequency = pd.to_numeric(data_T.loc["TOTAL_ORDERS"], errors="coerce")
 
-data_for_clusters = pd.DataFrame({
-    "Recency": (
-        data_T.loc["DAYSSINCELASTORDER"] /
-        data_T.loc["AVGDAYSBETWEENORDERS"].replace(0, np.nan)
-    ),
-    "Monetary": (
-        data_T.loc["REVENUE"] /
-        data_T.loc["TOTAL_ORDERS"].replace(0, np.nan)
-    ),
-    "Frequency": data_T.loc["TOTAL_ORDERS"]
-})
+    recency_score = pd.qcut(
+        days_since.rank(method="first"),
+        q=5,
+        labels=[5, 4, 3, 2, 1]
+    ).astype(int)
 
+    monetary_score = pd.qcut(
+        revenue.rank(method="first"),
+        q=5,
+        labels=[1, 2, 3, 4, 5]
+    ).astype(int)
+
+    data_for_clusters = pd.DataFrame({
+        "Recency": recency_score,
+        "Monetary": monetary_score,
+        "Frequency": frequency
+    })
+
+    return data_for_clusters
 
 def heatmap(d):
     d = pd.DataFrame(d.iloc[2::])
@@ -120,19 +127,9 @@ def heatmap(d):
     plt.tight_layout()  # Чтобы названия колонок не влезали за края графика
     plt.show()
 
+print(clusterisation(prep_clust(data)))
 
-#report = pd.DataFrame({
-    # col: distribution_report(data[col])
-    # for col in data.select_dtypes(include=np.number).columns}).T
-
-#print(report)
-
-
-
-print(clusterisation(data_for_clusters))
-
-
-result, X_scaled, model = clusterisation(data_for_clusters)
+result, X_scaled, model = clusterisation(prep_clust(data))
 
 print(result["Cluster"].value_counts().sort_index())
 
@@ -142,18 +139,16 @@ cluster_profile = (
     .mean()
     .round(2)
 )
-
-score1 = silhouette_score(X_scaled, result["Cluster"])
-ch_score = calinski_harabasz_score(X_scaled, result["Cluster"])
-db_score = davies_bouldin_score(X_scaled, result["Cluster"])
-
-
-print(f"Silhouette Score = {score1:.3f}")
-print(f"ch_score = {ch_score}")
-print(f"silhouette_score = {db_score}")
-
-
+def scores(result, X_scaled):
+    silhouette = silhouette_score(X_scaled, result["Cluster"])
+    calinski_harabasz = calinski_harabasz_score(X_scaled, result["Cluster"])
+    davies_bouldin = davies_bouldin_score(X_scaled, result["Cluster"])
+    
+    print(f"Silhouette Score = {silhouette:.3f}")
+    print(f"ch_score = {calinski_harabasz}")
+    print(f"davies_bouldin = {davies_bouldin}")
+    return silhouette, calinski_harabasz, davies_bouldin
 
 print(cluster_profile)
-
+print(scores(result, X_scaled))
 
