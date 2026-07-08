@@ -9,12 +9,8 @@ from sklearn.cluster import KMeans
 data = pd.read_csv(r"C:\Users\zakha\Downloads\salse.csv", header=0)
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
-from sklearn.mixture import GaussianMixture
-
-
 
 all_sums = np.sum(data, axis = 0)
-
 
 from scipy.stats import skew, normaltest
 
@@ -89,10 +85,16 @@ def prep_clust(data):
         labels=[1, 2, 3, 4, 5]
     ).astype(int)
 
+    frequency_score = pd.qcut(
+        frequency.rank(method="first"),
+        q=5,
+        labels=[1, 2, 3, 4, 5]
+    ).astype(int)
+
     data_for_clusters = pd.DataFrame({
         "Recency": recency_score,
         "Monetary": monetary_score,
-        "Frequency": frequency
+        "Frequency": frequency_score
     })
 
     return data_for_clusters
@@ -101,30 +103,28 @@ def heatmap(d):
     d = pd.DataFrame(d.iloc[2::])
     X_only_numbers = d.select_dtypes(include=["number"])
 
-# 1. Считаем матрицу корреляции (по умолчанию используется корреляция Пирсона)
     columns_to_drop = ["CustomerID", "index", "DAYSSINCELASTORDER"]
     X_only_numbers = X_only_numbers.drop(
         columns=[col for col in columns_to_drop if col in X_only_numbers.columns]
     )
     corr_matrix = X_only_numbers.corr()
 
-# 2. Настраиваем размер графика (подбери под количество своих колонок)
     plt.figure(figsize=(30,30 ))
 
-# 3. Рисуем тепловую карту
+
     sns.heatmap(
         corr_matrix,
-        annot=False,  # Включает отображение цифр внутри ячеек
-        fmt=".2f",  # Округляет цифры до 2 знаков после запятой
-        cmap="coolwarm",  # Цветовая схема (синий — негативная связь, красный — позитивная)
+        annot=False, 
+        fmt=".2f", 
+        cmap="coolwarm", 
         vmin=-1,
-        vmax=1,  # Границы шкалы от -1 до 1
-        linewidths=0.5,  # Тонкие линии между ячейками для аккуратности
+        vmax=1,  
+        linewidths=0.5, 
     )
 
 # 4. Настройка заголовка
     plt.title("Матрица корреляции признаков", fontsize=16)
-    plt.tight_layout()  # Чтобы названия колонок не влезали за края графика
+    plt.tight_layout() 
     plt.show()
 
 print(clusterisation(prep_clust(data)))
