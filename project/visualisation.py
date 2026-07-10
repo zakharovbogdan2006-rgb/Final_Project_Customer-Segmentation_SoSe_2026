@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.decomposition import PCA
 from RFM_calculation import  build_clusters
-
+''' TO RUN THIS FILE AND GET THE PUCTURE YOU NEED TO RUN "python visualization" IN TERMINAL IN THE CORRECT DIRECTORY'''
 
 def plot_pca(ax, result, x_scaled, model, title):
     labels = result["Cluster"].to_numpy()
