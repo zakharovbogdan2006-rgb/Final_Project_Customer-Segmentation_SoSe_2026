@@ -7,7 +7,7 @@ import seaborn as sns  # for heatmap
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-from scipy.stats import skew, normaltest
+from scipy.stats import skew,№ normaltest
 # df = pd.read_csv(r"C:\Users\zakha\Downloads\salse.csv")
 # df.to_excel("salse.xlsx", index= False)
 data = pd.read_csv(r"C:\Users\zakha\Downloads\salse.csv",
