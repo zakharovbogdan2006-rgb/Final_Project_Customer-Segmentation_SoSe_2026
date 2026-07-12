@@ -10,8 +10,7 @@ from sklearn.decomposition import PCA
 from scipy.stats import skew, normaltest
 # df = pd.read_csv(r"C:\Users\zakha\Downloads\salse.csv")
 # df.to_excel("salse.xlsx", index= False)
-data = pd.read_csv(r"C:\Users\zakha\Downloads\salse.csv",
-                   header=0)  # get the data
+data = pd.read_csv(r"C:\Users\zakha\Downloads\salse.csv", header=0)  # get the data
 # all_sums = np.sum(data, axis = 0)
 
 def distribution_report(series):
@@ -48,7 +47,7 @@ def prep_clust(data):
 
     days_since = pd.to_numeric(data_T.loc["DAYSSINCELASTORDER"], errors="coerce")
     revenue = pd.to_numeric(data_T.loc["REVENUE"], errors="coerce")
-    frequency = pd.to_numeric(data_T.loc["TOTAL_ORDERS"], errors="coerce")
+    freq = pd.to_numeric(data_T.loc["TOTAL_ORDERS"], errors="coerce")
 
     recency_score = pd.qcut(
         days_since.rank(method="first"),
@@ -62,8 +61,8 @@ def prep_clust(data):
         labels=[1, 2, 3, 4, 5]
     ).astype(int)
 
-    frequency_score = pd.qcut(
-        frequency.rank(method="first"),
+    freq_score = pd.qcut(
+        freq.rank(method="first"),
         q=5,
         labels=[1, 2, 3, 4, 5]
     ).astype(int)
@@ -71,7 +70,7 @@ def prep_clust(data):
     data_for_clusters = pd.DataFrame({
         "Recency": recency_score,
         "Monetary": monetary_score,
-        "Frequency": frequency_score
+        "Frequency": freq_score
     })
 
     return data_for_clusters

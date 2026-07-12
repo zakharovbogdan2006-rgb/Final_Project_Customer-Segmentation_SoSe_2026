@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.decomposition import PCA
+from sklearn.decomposition import  PCA
 from RFM_calculation import  build_clusters
 ''' TO RUN THIS FILE AND GET THE PUCTURE YOU NEED TO RUN "python visualization" IN TERMINAL IN THE CORRECT DIRECTORY'''
 
@@ -8,23 +8,22 @@ def plot_pca(ax, result, x_scaled, model, title):
     labels = result["Cluster"].to_numpy()
 
     pca = PCA(n_components=2)
-    points_pca = pca.fit_transform(x_scaled)
-    centroids_pca = pca.transform(model.cluster_centers_)
+    p_pca = pca.fit_transform(x_scaled)
+    centr_pca = pca.transform(model.cluster_centers_)
 
-    padding = 0.5
-    x_min = points_pca[:, 0].min() - padding
-    x_max = points_pca[:, 0].max() + padding
-    y_min = points_pca[:, 1].min() - padding
-    y_max = points_pca[:, 1].max() + padding
+    p = 0.5
+    x_min = p_pca[:, 0].min() - p
+    x_max = p_pca[:, 0].max() + p
+    y_min = p_pca[:, 1].min() - p
+    y_max = p_pca[:, 1].max() + p
+    x_vals = np.linspace(x_min, x_max, 500)
+    y_vals = np.linspace(y_min, y_max, 500)
 
-    xx, yy = np.meshgrid(
-        np.linspace(x_min, x_max, 500),
-        np.linspace(y_min, y_max, 500),
-    )
+    xx, yy = np.meshgrid(x_vals, y_vals)
 
     grid_pca = np.column_stack((xx.ravel(), yy.ravel()))
-    grid_original = pca.inverse_transform(grid_pca)
-    grid_labels = model.predict(grid_original).reshape(xx.shape)
+    grid_or = pca.inverse_transform(grid_pca)
+    grid_labels = model.predict(grid_or).reshape(xx.shape)
 
     ax.contourf(
         xx,
@@ -45,8 +44,8 @@ def plot_pca(ax, result, x_scaled, model, title):
     )
 
     ax.scatter(
-        points_pca[:, 0],
-        points_pca[:, 1],
+        p_pca[:, 0],
+        p_pca[:, 1],
         c=labels,
         cmap="viridis",
         s=8,
@@ -55,9 +54,9 @@ def plot_pca(ax, result, x_scaled, model, title):
     )
 
     ax.scatter(
-        centroids_pca[:, 0],
-        centroids_pca[:, 1],
-        c=np.arange(len(centroids_pca)),
+        centr_pca[:, 0],
+        centr_pca[:, 1],
+        c=np.arange(len(centr_pca)),
         cmap="viridis",
         marker="^",
         s=35,
@@ -72,7 +71,6 @@ def plot_pca(ax, result, x_scaled, model, title):
     ax.set_xlabel("PCA 1")
     ax.set_ylabel("PCA 2")
     ax.legend()
-
 
 def show_visualizations():
     clusters = build_clusters()
