@@ -1,8 +1,0 @@
-i = -10
-while i!= 10:
-    try:
-        a = (10/i)
-        print(a)
-    except ZeroDivisionError:
-        print("oops")
-    i+=1

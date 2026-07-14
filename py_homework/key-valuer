@@ -1,9 +1,0 @@
-import ast
-d = ast.literal_eval(input())
-k = ast.literal_eval(input())
-i = 0
-while i != len(k):
-    print(d.get(k[i]),end = " " )
-    i+=1
-#{1523: 'hello',272: 'world',3635: 'python'}
-#[1523, 272, 3635,272,1523,1523]

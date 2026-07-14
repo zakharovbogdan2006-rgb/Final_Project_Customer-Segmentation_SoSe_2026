@@ -1,4 +1,0 @@
-s = input()
-from pathlib import Path
-a = Path(f"/Users/Test_user/Python course/{s}").mkdir(parents=True, exist_ok=True)
-print(Path.cwd())
