@@ -11,20 +11,19 @@ RFM_FEATURES = ["Recency", "Monetary", "Frequency"]
 
 def prep_clust(data): #from RFM_calculation.py
     data_T = data.T
-    days = pd.to_numeric(data_T.loc["DAYSSINCELASTORDER"], errors="coerce")
-    revenue = pd.to_numeric(data_T.loc["REVENUE"], errors="coerce")
-    orders = pd.to_numeric(data_T.loc["TOTAL_ORDERS"], errors="coerce")
+    days = data_T.loc["DAYSSINCELASTORDER"]
+    revenue = data_T.loc["REVENUE"]
+    orders = data_T.loc["TOTAL_ORDERS"]
     return pd.DataFrame({
         "Recency": pd.qcut(days.rank(method="first"), 5, labels=[5, 4, 3, 2, 1]),
-        "Monetary": pd.qcut(revenue.rank(method="first"), 5,labels=[1, 2, 3, 4, 5]),
-        "Frequency": pd.qcut(orders.rank(method="first"), 5,labels=[1, 2, 3, 4, 5]),
-    })
+        "Monetary": pd.qcut(revenue.rank(method="first"), 5, labels=[1, 2, 3, 4, 5]),
+        "Frequency": pd.qcut(orders.rank(method="first"), 5, labels=[1, 2, 3, 4, 5]),})
 
 def clusterisation(d):
     d = d.copy()
     scaler = StandardScaler()
     scaled = scaler.fit_transform(d[RFM_FEATURES])
-    model = KMeans(n_clusters=4, random_state=42, n_init=100)
+    model = KMeans(n_clusters=4, random_state=42, n_init=100) #this number of clucters og clusters results in the best accuracy and fits into RFM logic
     d["Cluster"] = model.fit_predict(scaled)
     return d
 
@@ -56,67 +55,37 @@ def create_churn(data):
     print(f"Клиентов по правилу: {data['CHURN'].sum()}")
     return data
 
-
 def train_model(data):
     excl = [
-        "index",
-        "CustomerID",
-        "FIRST_ORDER_DATE",
-        "LATEST_ORDER_DATE",
-        "DAYSSINCELASTORDER",
-        "TOTAL_ORDERS",
-        "REVENUE",
-        "CHURN",
-        "Cluster",
-        "Recency",
-        "Frequency",
-        "Monetary"
-    ]
-
+        "index","CustomerID", "FIRST_ORDER_DATE", "LATEST_ORDER_DATE", "DAYSSINCELASTORDER",
+        "TOTAL_ORDERS", "REVENUE", "CHURN", "Cluster", "Recency", "Frequency","Monetary"]
     n_cols = data.select_dtypes(include="number").columns
     features = []
-
     for col in n_cols:
         if col not in excl:
             features.append(col)
 
     x = data[features]
     y = data["CHURN"]
-
-    x_train, x_test, y_train, y_test = train_test_split(
-        x,
-        y,
-        test_size=0.2,
-        random_state=42,
-        stratify=y
-    )
-
+    x_train, x_test, y_train, y_test = train_test_split(x,y, test_size=0.2,random_state=42,stratify=y)
     scaler = StandardScaler()
     x_train = scaler.fit_transform(x_train)
     x_test = scaler.transform(x_test)
-
-    model = LogisticRegression(
-        max_iter=2000,
-        class_weight="balanced",
-        random_state=42
-    )
-
+    model = LogisticRegression(max_iter=2000,class_weight="balanced", random_state=42)
     model.fit(x_train, y_train)
-
     pred = model.predict(x_test)
 
     accuracy = accuracy_score(y_test, pred)
-    precision = precision_score(y_test, pred, zero_division=0)
-    recall = recall_score(y_test, pred, zero_division=0)
-    f1 = f1_score(y_test, pred, zero_division=0)
+    precision = precision_score(y_test, pred)
+    recall = recall_score(y_test, pred)
+    f1 = f1_score(y_test, pred)
 
-    print("\n--- Качество логистической регрессии ---")
+    print("\n--- quality ---")
     print("Accuracy:", round(accuracy, 3))
     print("Precision:", round(precision, 3))
     print("Recall:", round(recall, 3))
     print("F1-score:", round(f1, 3))
 
-    # делаем прогноз для всех клиентов
     all_x = data[features]
     all_x = scaler.transform(all_x)
 
