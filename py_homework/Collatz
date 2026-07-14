@@ -1,0 +1,34 @@
+import pandas as pd
+df = pd.read_csv(r"C:\Users\zakha\Downloads\icu_data_example.csv")
+d2 = pd.read_csv(r"C:\Users\zakha\Downloads\icu_data_additional.csv")
+
+print(df)
+print(d2)
+def engineer_features(df):
+    df["age_group"] = pd.cut(
+        df["age"],
+        bins=[0, 20, 40, 60, 80, float("inf")],
+        labels=["0-20", "21-40", "41-60", "61-80", "81+"],
+        include_lowest=True
+    )
+
+    df["los_tier"] = pd.cut(
+        df["los"],
+        bins=[-float("inf"), 5, 10, float("inf")],labels=["Short", "Medium", "Long"],right=False)
+    q1 = df["weight"].quantile(0.25)
+    q3 = df["weight"].quantile(0.75)
+    iqr = q3 - q1
+    weight_outliers = ((df["weight"] < q1 - 1.5 * iqr) | (df["weight"] > q3 + 1.5 * iqr)).sum()
+    q1 = df["Heart Rate"].quantile(0.25)
+    q3 = df["Heart Rate"].quantile(0.75)
+    iqr = q3 - q1
+    hr_outliers = ((df["Heart Rate"] < q1 - 1.5 * iqr) | (df["Heart Rate"] > q3 + 1.5 * iqr)).sum()
+
+    stats = {
+        "weight_outliers": weight_outliers,
+        "heart_rate_outliers": hr_outliers,
+        "male_median_los": df[df["gender"] == "M"]["los"].median(),
+        "female_median_los": df[df["gender"] == "F"]["los"].median(),
+        "short_count": (df["los_tier"] == "Short").sum()
+    }
+    return df, stats

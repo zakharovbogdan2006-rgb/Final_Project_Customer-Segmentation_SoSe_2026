@@ -1,0 +1,11 @@
+s = input()
+
+l = []
+r = ""
+
+for c in s:
+    if c.lower() not in l:
+        l.append(c.lower())
+        r += c
+
+print(r)

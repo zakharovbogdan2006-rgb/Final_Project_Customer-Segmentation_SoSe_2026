@@ -1,0 +1,49 @@
+def distribution_report(series):
+    x = pd.to_numeric(series, errors="coerce").dropna()
+
+    result = {
+        "mean": x.mean(),
+        "median": x.median(),
+        "std": x.std(),
+        "skewness": skew(x),
+        "normal_p": normaltest(x).pvalue,
+        "q25": x.quantile(0.25),
+        "q50": x.quantile(0.50),
+        "q75": x.quantile(0.75),
+        "q90": x.quantile(0.90),
+        "q95": x.quantile(0.95),
+        "q99": x.quantile(0.99), }
+
+    if (x > 0).all():
+        log_x = np.log(x)
+        result["log_skewness"] = skew(log_x)
+        result["lognormal_p"] = normaltest(log_x).pvalue
+    else:
+        result["log_skewness"] = np.nan
+        result["lognormal_p"] = np.nan
+
+    return pd.Series(result)
+
+def heatmap(d):
+    d = pd.DataFrame(d.iloc[2::])
+    X_only_numbers = d.select_dtypes(include=["number"])
+
+    columns_to_drop = ["CustomerID", "index", "DAYSSINCELASTORDER"]
+    X_only_numbers = X_only_numbers.drop(
+        columns=[col for col in columns_to_drop if col in X_only_numbers.columns])
+    corr_matrix = X_only_numbers.corr()
+
+    plt.figure(figsize=(30, 30))
+
+    sns.heatmap(
+        corr_matrix,
+        annot=False,
+        fmt=".2f",
+        cmap="coolwarm",
+        vmin=-1,
+        vmax=1,
+        linewidths=0.5,
+    )
+    plt.title("Correlation matrix", fontsize=16)
+    plt.tight_layout()
+    plt.show()

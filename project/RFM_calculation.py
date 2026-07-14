@@ -4,6 +4,7 @@ from sklearn.metrics import silhouette_score,  davies_bouldin_score, calinski_ha
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from scipy.stats import skew, normaltest
+from sklearn.preprocessing import StandardScaler
 # df = pd.read_csv(r"C:\Users\zakha\Downloads\salse.csv")
 data = pd.read_csv(r"C:\Users\zakha\Downloads\salse.csv", header=0)  # get the data
 
@@ -39,14 +40,17 @@ def prep_clust_raw(data):
 
 def clusterisation(d):
     X = d[features].copy()
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
     kmeans = KMeans( n_clusters=4, random_state=42, n_init=50)   #best number of clusters based on the scores and RFM logi
     labels = kmeans.fit_predict(X)
     result = d.copy()
     result["Cluster"] = labels
 
-    return result, X, kmeans
+    return result, X, kmeans, scaler
 
-result, X, model = clusterisation(prep_clust(data))
+result, X, model, scaler = clusterisation(prep_clust(data))
+
 data[["Recency", "Monetary", "Frequency", "Cluster"]] = (
     result[["Recency", "Monetary", "Frequency", "Cluster"]])
 

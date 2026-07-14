@@ -1,0 +1,11 @@
+from collections import Counter
+
+s = input()
+l = s.split()
+d = dict(sorted(Counter(l).items()))
+i = 0
+while i != len(d.items()):
+    print(list(d.keys())[i], end = "")
+    print(':', end = "")
+    print(list(d.values())[i])
+    i+=1

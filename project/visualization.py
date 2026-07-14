@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.lines import Line2D
 from sklearn.decomposition import PCA
 from RFM_calculation import build_clusters
 ''' TO RUN THIS FILE AND GET THE PUCTURE YOU NEED TO RUN "python visualization" IN TERMINAL IN THE CORRECT DIRECTORY'''
@@ -30,7 +31,17 @@ def plot_pca(ax, result, x_scaled, model, title):
     ax.set_title(f"{title}\nPCA saved {variance:.1%} of variance")
     ax.set_xlabel("PCA 1")
     ax.set_ylabel("PCA 2")
-    ax.legend()
+    legend_elements = [
+        Line2D([0], [0], marker="o", color="w", label=f"Cluster {i}",
+        markerfacecolor=plt.cm.viridis(i / (model.n_clusters - 1)), markersize=8)
+        for i in range(model.n_clusters)]
+
+    legend_elements.append(
+    Line2D([0], [0], marker="^", color="w", label="Centroids",
+        markerfacecolor="black", markeredgecolor="black", markersize=10 ))
+
+    plt.legend(handles=legend_elements)
+    
 
 def show_visualizations():
     clusters = build_clusters()

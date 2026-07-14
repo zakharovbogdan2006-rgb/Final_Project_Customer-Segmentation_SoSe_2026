@@ -1,0 +1,25 @@
+'''At Nexus Manufacturing, an automated factory, the production of a finished product consists of multiple Tasks (Nodes). 
+To ensure efficiency, certain tasks must be completed before others can begin—these are called Dependencies (Edges).
+
+A Valid Plan (DAG): Dependencies must form a Directed Acyclic Graph (DAG). 
+This allows the system to determine a clear, linear execution order (Topological Sort).
+The Problem (Cycle): If a configuration error creates a "Circular Dependency" (e.g., A → B → C → A), a Deadlock occurs. 
+The automated assembly line will freeze because no task in the loop can start first.
+Implement the function analyze_production_flow(edges) to validate the safety of a production plan.
+
+Function Specifications:
+
+Input: edges — A list of tuples, where each tuple (u, v) represents that task u must be completed before task v.
+Output:
+If the plan is a DAG: Return a list containing a valid execution sequence (Topological Sort).
+
+If a Cycle is detected: Return the string "Logic Conflict: Deadlock Identified".
+
+'''
+def func(a, b=2, *args, **keywords):
+    print(a)
+    print(b)
+    print(args)
+    print(keywords)
+
+func(1, 3, '10', '20', name="Alex", age=21)
