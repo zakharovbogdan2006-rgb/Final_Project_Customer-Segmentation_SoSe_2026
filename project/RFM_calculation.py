@@ -46,7 +46,6 @@ def clusterisation(d):
     labels = kmeans.fit_predict(X)
     result = d.copy()
     result["Cluster"] = labels
-
     return result, X, kmeans, scaler
 
 result, X, model, scaler = clusterisation(prep_clust(data))
