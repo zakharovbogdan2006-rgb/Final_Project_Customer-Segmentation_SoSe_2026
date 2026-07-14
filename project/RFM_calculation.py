@@ -2,7 +2,6 @@ import pandas as pd
 # scores to determine the quality of clusteriasion
 from sklearn.metrics import silhouette_score,  davies_bouldin_score, calinski_harabasz_score
 from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from scipy.stats import skew, normaltest
 # df = pd.read_csv(r"C:\Users\zakha\Downloads\salse.csv")
@@ -40,20 +39,14 @@ def prep_clust_raw(data):
 
 def clusterisation(d):
     X = d[features].copy()
-
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-
     kmeans = KMeans( n_clusters=4, random_state=42, n_init=50)   #best number of clusters based on the scores and RFM logi
-
-    labels = kmeans.fit_predict(X_scaled)
+    labels = kmeans.fit_predict(X)
     result = d.copy()
     result["Cluster"] = labels
 
-    return result, X_scaled, kmeans, scaler
+    return result, X, kmeans
 
-result, X_scaled, model, scaler = clusterisation(prep_clust(data))
-
+result, X, model = clusterisation(prep_clust(data))
 data[["Recency", "Monetary", "Frequency", "Cluster"]] = (
     result[["Recency", "Monetary", "Frequency", "Cluster"]])
 
@@ -68,15 +61,15 @@ def scores(result, X_scaled):
     return silhouette, calinski_harabasz, davies_bouldin
 
 cluster_profile = result.groupby("Cluster")[features].mean()
-points = X_scaled
+points = X
 labels = result["Cluster"].to_numpy()
 centroids = model.cluster_centers_
 pca = PCA(n_components=2)
-points_pca = pca.fit_transform(X_scaled)
+points_pca = pca.fit_transform(X)
 centroids_pca = pca.transform(model.cluster_centers_)
 
 print(cluster_profile)
-print(scores(result, X_scaled))
+print(scores(result, X))
 print("data remained:",pca.explained_variance_ratio_.sum())
 
 def build_clusters():
