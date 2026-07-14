@@ -21,8 +21,7 @@ def prep_clust(data): #from RFM_calculation.py
 
 def clusterisation(d):
     d = d.copy()
-    scaler = StandardScaler()
-    scaled = scaler.fit_transform(d[RFM_FEATURES])
+    scaled =d[RFM_FEATURES]
     model = KMeans(n_clusters=4, random_state=42, n_init=100) #this number of clucters og clusters results in the best accuracy and fits into RFM logic
     d["Cluster"] = model.fit_predict(scaled)
     return d
@@ -37,13 +36,10 @@ def prepare_data(data):
     return data
 
 def create_churn(data):
-    """this is generally a proposition of a churn, 
-    becuase it is impossible to calculate "real" churn rate on the data provideed"""
-
+    """this is generally a proposition of a churn, becuase it is impossible to calculate "real" churn rate on the data provideed"""
     days_q80 = data["DAYSSINCELASTORDER"].quantile(0.80) 
     orders_q20 = data["TOTAL_ORDERS"].quantile(0.20)
     revenue_q20 = data["REVENUE"].quantile(0.20)
-
     # all three must be satisfied
     data["CHURN"] = ((data["DAYSSINCELASTORDER"] >= days_q80)
     & (data["TOTAL_ORDERS"] <= orders_q20) 
@@ -117,7 +113,6 @@ def main():
         shown[col] = shown[col].map(lambda value: f"{value:.2%}")
     print("\n", shown.to_string(index=False))
     summary.to_csv(SUMMARY_PATH, index=False)
-
 
 if __name__ == "__main__":
     main()
