@@ -1,150 +1,69 @@
-# --------------------------------------------------------
-# RFM Analysis and Customer Segmentation Results
-# --------------------------------------------------------
-# This part of the code creates and saves three final output tables:
-# 1. rfm_analysis_result.csv
-# 2. cluster_profile_summary.csv
-# 3. rfm_code_distribution_by_cluster.csv
-#
-# It should be run after the RFM scores, RFM_code, and Cluster columns
-# have already been created in the result dataframe.
-# --------------------------------------------------------
+import pandas as pd
+import matplotlib.pyplot as plt
+# 1. Open the cleaned file from the previous step
+df = pd.read_csv(r'C:\Users\zakha\TUM_programming_Sose2026\project\final_cleaned_sales.csv', sep = ';')
 
-# --------------------------------------------------------
-# 1. RFM Analysis Result with CustomerID from original data
-# --------------------------------------------------------
+# POINT 1: Sorting Customers based on Recency for making Recency Segmentation
 
-rfm_result = result[
-    ["R_score", "F_score", "M_score", "RFM_code", "Cluster"]
-].copy()
+top_recency = df.sort_values(by='DAYS_SINCE_LAST_ORDER', ascending=True)
 
-# Take CustomerID from the original dataframe using the same index as result
-rfm_result.insert(
-    0,
-    "CustomerID",
-    data.loc[result.index, "CustomerID"].values
-)
+# POINT 2: Sorting Customers based on Frequency for making frequency segmentation
 
-# Show the customer-level RFM result
-try:
-    display(rfm_result)
-except NameError:
-    print(rfm_result.head())
+top_frequency = df.sort_values(by='TOTAL_ORDERS', ascending=False)
 
-# Save the customer-level RFM result
-rfm_result.to_csv(
-    "rfm_analysis_result.csv",
-    index=False,
-    encoding="utf-8-sig"
-)
+# POINT 3: Sorting Customers based on Monetary value for making monetary segmentation
 
-print("File 'rfm_analysis_result.csv' has been created.")
+top_monetary = df.sort_values(by='TOTAL_REVENUE', ascending=False)
 
+# POINT 4: Simple Visualization with Matpotlib
+#RECENCY TABLE
+df["DAYS_SINCE_LAST_ORDER"].hist(bins=100, weights=[100/len(top_recency)]*len(top_recency))
+title = 'Distribution of Recency'
+median = top_recency['DAYS_SINCE_LAST_ORDER'].median()
+skewness = top_recency['DAYS_SINCE_LAST_ORDER'].skew()
+plt.text(skewness + 100, plt.ylim()[1] * 0.8, f'Skewness: {skewness:.3f}', color='b', fontsize=10)
+plt.title(title)
+plt.axvline(median, color='r', linestyle='dashed', linewidth=1)
+plt.text(median + 40, plt.ylim()[1] * 0.9, f'Median: {median}', color='r', fontsize=10)
+plt.xlabel("Recency (Days Since Last Order)")
+plt.ylabel("Percentage of Customers (%)")
+plt.show()
 
-# --------------------------------------------------------
-# 2. Cluster Profile Summary
-# --------------------------------------------------------
+#FREQUENCY TABLE
+df["TOTAL_ORDERS"].hist(bins=100, weights=[100/len(top_frequency)]*len(top_frequency))
+title = 'Distribution of Frequency'
+median = top_frequency['TOTAL_ORDERS'].median()
+skewness = top_frequency['TOTAL_ORDERS'].skew()
+plt.title(title)
+plt.text(skewness + 18, plt.ylim()[1] * 0.8, f'Skewness: {skewness:.3f}', color='b', fontsize=10)
+plt.axvline(median, color='r', linestyle='dashed', linewidth=1)
+plt.text(median + 12, plt.ylim()[1] * 0.9, f'Median: {median}', color='r', fontsize=10)
+plt.xlabel("Frequency (Total Orders)")
+plt.ylabel("Percentage of Customers (%)")
+plt.show()
 
-cluster_profile_summary = (
-    result
-    .groupby("Cluster")
-    .agg(
-        Total_Customers=("Cluster", "size"),
-        Avg_R_score=("R_score", "mean"),
-        Avg_F_score=("F_score", "mean"),
-        Avg_M_score=("M_score", "mean")
-    )
-    .reset_index()
-)
+#MONETARY TABLE
+df["TOTAL_REVENUE"].hist(bins=100, weights=[100/len(top_monetary)]*len(top_monetary))
+title = 'Distribution of Monetary'
+median = top_monetary['TOTAL_REVENUE'].median()
+skewness = top_monetary['TOTAL_REVENUE'].skew()
+plt.title(title)
+plt.text(skewness + 5000, plt.ylim()[1] * 0.8, f'Skewness: {skewness:.3f}', color='b', fontsize=10)
+plt.axvline(median, color='r', linestyle='dashed', linewidth=1)
+plt.text(median + 4034, plt.ylim()[1] * 0.9, f'Median: {median}', color='r', fontsize=10)
+plt.xlabel("Monetary (Total Revenue)")
+plt.ylabel("Percentage of Customers (%)")
+plt.show()
 
-# Round average RFM scores for a cleaner report table
-cluster_profile_summary[["Avg_R_score", "Avg_F_score", "Avg_M_score"]] = (
-    cluster_profile_summary[["Avg_R_score", "Avg_F_score", "Avg_M_score"]]
-    .round(2)
-)
+#CUSTOMER DAY OF VISIT TABLE
+day_visit = df[['MONDAY_ORDERS', 'TUESDAY_ORDERS', 'WEDNESDAY_ORDERS', 'THURSDAY_ORDERS', 'FRIDAY_ORDERS', 'SATURDAY_ORDERS', 'SUNDAY_ORDERS']].sum()
+day_visit.index=['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+day_visit.plot.bar()
+plt.xlabel("Day")
+plt.ylabel('Number of Visits')
+plt.title("Customer Visits by Day of the Week")
 
-# Business interpretation of clusters
-segment_names = {
-    0: "Recent low-value customers",
-    1: "Regular customers at risk",
-    2: "Low-value inactive customers",
-    3: "High-value active customers"
-}
+plt.show()
 
-cluster_profile_summary["Segment_Interpretation"] = (
-    cluster_profile_summary["Cluster"].map(segment_names)
-)
-
-# Show the cluster summary table
-try:
-    display(cluster_profile_summary)
-except NameError:
-    print(cluster_profile_summary)
-
-# Save the cluster profile summary
-cluster_profile_summary.to_csv(
-    "cluster_profile_summary.csv",
-    index=False,
-    encoding="utf-8-sig"
-)
-
-print("File 'cluster_profile_summary.csv' has been created.")
-
-
-# --------------------------------------------------------
-# 3. RFM Code Distribution by Cluster
-# --------------------------------------------------------
-
-# Count how many customers have each RFM code inside each cluster
-rfm_cluster_table = (
-    result
-    .groupby(["Cluster", "RFM_code"])
-    .size()
-    .reset_index(name="Customer_Count")
-    .sort_values(["Cluster", "RFM_code"])
-)
-
-# Count total number of customers in each cluster
-cluster_totals = (
-    result
-    .groupby("Cluster")
-    .size()
-    .reset_index(name="Cluster_Total")
-)
-
-# Add cluster totals to the RFM-code table
-rfm_cluster_table = rfm_cluster_table.merge(
-    cluster_totals,
-    on="Cluster",
-    how="left"
-)
-
-# Calculate the share of each RFM code inside its cluster
-rfm_cluster_table["Share_in_Cluster_%"] = (
-    rfm_cluster_table["Customer_Count"] /
-    rfm_cluster_table["Cluster_Total"] * 100
-).round(2)
-
-# Save the detailed RFM-code distribution in section style
-with open("rfm_code_distribution_by_cluster.csv", "w", encoding="utf-8-sig") as f:
-
-    f.write("RFM Code Distribution by Cluster\n\n")
-
-    for cluster in sorted(rfm_cluster_table["Cluster"].unique()):
-
-        cluster_data = rfm_cluster_table[
-            rfm_cluster_table["Cluster"] == cluster
-        ].copy()
-
-        total = int(cluster_data["Cluster_Total"].iloc[0])
-
-        f.write(f"Cluster {cluster} | Total: {total}\n")
-
-        cluster_data[["RFM_code", "Customer_Count", "Share_in_Cluster_%"]].to_csv(
-            f,
-            index=False
-        )
-
-        f.write("\n")
-
-print("File 'rfm_code_distribution_by_cluster.csv' has been created.")
+df.to_csv('Sales+EDA.csv', index=False)
+print("-> File 'Sales+EDA.csv' has been successfully created.")

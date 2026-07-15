@@ -63,18 +63,19 @@ def train_model(data):
 
     x = data[features]
     y = data["CHURN"]
+    #test_size to check, whether the model works good
     x_train, x_test, y_train, y_test = train_test_split(x,y, test_size=0.2,random_state=42,stratify=y)
-    scaler = StandardScaler()
+    scaler = StandardScaler() #initialize
     x_train = scaler.fit_transform(x_train)
     x_test = scaler.transform(x_test)
-    model = LogisticRegression(max_iter=2000,class_weight="balanced", random_state=42)
+    model = LogisticRegression(max_iter=2000,class_weight="balanced", random_state=42) #"balanced" to cope with heterogeneous data
     model.fit(x_train, y_train)
     pred = model.predict(x_test)
 
-    accuracy = accuracy_score(y_test, pred)
-    precision = precision_score(y_test, pred)
-    recall = recall_score(y_test, pred)
-    f1 = f1_score(y_test, pred)
+    accuracy = accuracy_score(y_test, pred) # Compute the proportion of correct predictions
+    precision = precision_score(y_test, pred) #Precision measures how many predicted positive cases are actually positive
+    recall = recall_score(y_test, pred) #Recall measures how many actual positive cases are correctly identified.
+    f1 = f1_score(y_test, pred) #harmonic average of precision and recall
 
     print("\n--- quality ---")
     print("Accuracy:", round(accuracy, 3))
@@ -90,6 +91,7 @@ def train_model(data):
     data["PREDICTED_CHURN"] = model.predict(all_x)
 
     return data
+#Dispaly to console and get the csv
 def main():
     data = prepare_data(pd.read_csv(DATA_PATH))
     clusters = clusterisation(prep_clust(data))

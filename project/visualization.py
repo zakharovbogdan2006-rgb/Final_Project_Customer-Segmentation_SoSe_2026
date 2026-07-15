@@ -6,33 +6,33 @@ from RFM_calculation import build_clusters
 ''' TO RUN THIS FILE AND GET THE PUCTURE YOU NEED TO RUN "python visualization" IN TERMINAL IN THE CORRECT DIRECTORY'''
 def plot_pca(ax, result, x_scaled, model, title):
     labels = result["Cluster"].to_numpy()
-    pca = PCA(n_components=2)
+    pca = PCA(n_components=2) #initialization
     p_pca = pca.fit_transform(x_scaled)
-    centr_pca = pca.transform(model.cluster_centers_)
+    centr_pca = pca.transform(model.cluster_centers_) #centroids also should be transformed with pca
     p = 0.5
-    x_min = p_pca[:, 0].min() - p
+    x_min = p_pca[:, 0].min() - p #make the square of the picture
     x_max = p_pca[:, 0].max() + p
     y_min = p_pca[:, 1].min() - p
     y_max = p_pca[:, 1].max() + p
-    x_vals = np.linspace(x_min, x_max, 500)
+    x_vals = np.linspace(x_min, x_max, 500) #fill the space with points (500)
     y_vals = np.linspace(y_min, y_max, 500)
 
-    xx, yy = np.meshgrid(x_vals, y_vals)
-    grid_pca = np.column_stack((xx.ravel(), yy.ravel()))
+    xx, yy = np.meshgrid(x_vals, y_vals) #make grid
+    grid_pca = np.column_stack((xx.ravel(), yy.ravel())) #transform data, i.e. make one array from two
     grid_or = pca.inverse_transform(grid_pca)
     grid_labels = model.predict(grid_or).reshape(xx.shape)
 
-    ax.contourf(xx, yy, grid_labels, levels=np.arange(model.n_clusters + 1) - 0.5,cmap="viridis",alpha=0.2,)
-    ax.contour(xx,yy, grid_labels, levels=np.arange(model.n_clusters - 1) + 0.5, colors="black", linewidths=1.5,)
-    ax.scatter( p_pca[:, 0],p_pca[:, 1],c=labels, cmap="viridis", s=8, alpha=0.35, edgecolors="none",)
+    ax.contourf(xx, yy, grid_labels, levels=np.arange(model.n_clusters + 1) - 0.5,cmap="viridis",alpha=0.2,) #plot dotes
+    ax.contour(xx,yy, grid_labels, levels=np.arange(model.n_clusters - 1) + 0.5, colors="black", linewidths=1.5,) #plot centroids
+    ax.scatter(p_pca[:, 0],p_pca[:, 1],c=labels, cmap="viridis", s=8, alpha=0.35, edgecolors="none",) #fill with color
     ax.scatter(centr_pca[:, 0], centr_pca[:, 1], c=np.arange(len(centr_pca)), cmap="viridis",
-        marker="^", s=35, edgecolors="black", linewidths=1, label="Centroids", zorder=10, )
+        marker="^", s=35, edgecolors="black", linewidths=1, label="Centroids", zorder=10, ) #borders between clusters
     variance = pca.explained_variance_ratio_.sum()
     ax.set_title(f"{title}\nPCA saved {variance:.1%} of variance")
     ax.set_xlabel("PCA 1")
     ax.set_ylabel("PCA 2")
     legend_elements = [
-        Line2D([0], [0], marker="o", color="w", label=f"Cluster {i}",
+        Line2D([0], [0], marker="o" , color="w", label=f"Cluster {i}",
         markerfacecolor=plt.cm.viridis(i / (model.n_clusters - 1)), markersize=8)
         for i in range(model.n_clusters)]
 
@@ -44,7 +44,7 @@ def plot_pca(ax, result, x_scaled, model, title):
     
 
 def show_visualizations():
-    clusters = build_clusters()
+    clusters = build_clusters() #build clusters from file RFM_calculation
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 7))
     scores_result, scores_x, scores_model, _ = clusters["scores"]
@@ -57,4 +57,4 @@ def show_visualizations():
 
 
 if __name__ == "__main__":
-    show_visualizations()
+    show_visualizations() # run visualizations only when this script is executed

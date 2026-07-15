@@ -1,25 +1,20 @@
 import pandas as pd
-
 #Loading the data from the dataset
-df = pd.read_csv(r'C:\Users\zakha\Downloads\salse (3).csv')
+df = pd.read_csv(r'C:\Users\zakha\TUM_programming_Sose2026\project\salse.csv')
 
-# Drop columns where any row is null, after checking how many rows were dropped, we can say we have no null entries. 
-#Might change up later and add fillup formulas for missing values, but there is no current need since no empty fields in the cs anywas
+# Drop rows where every entry is null, 
+#rows where only some are null cand be filled with median vallues using fillna()
 initial_cols = df.shape[1]
-df = df.dropna(axis=1, how='any')
+df = df.dropna(axis=0, how='all')
 print(f"Dropped {initial_cols - df.shape[1]} empty columns.")
 
-# Rename columns to better description and standardized wording "AVERAGE from AVG" and word separator "_"
+# 3. Rename columns to better description and standardized wording "AVERAGE from AVG" and word separator "_"
 df = df.rename(columns={
     'REVENUE': 'TOTAL_REVENUE',
     'AVERAGESHIPPING': 'AVERAGE_SHIPPING_COST',
     'AVGDAYSBETWEENORDERS': 'AVERAGE_DAYS_BETWEEN_ORDERS',
     'DAYSSINCELASTORDER': 'DAYS_SINCE_LAST_ORDER'
 })
-
-#  Drop index because we already use the ID as a unique identifier and the index is redundant. We dont need it for the data analysis
-if 'index' in df.columns:
-    df = df.drop(columns=['index'])
 
 # Filtering some possible impossible negative values, in case they exist. 
 # Also filtering out any customers whose latest order date is before their first order date, which is obviouslyimpossible.
@@ -29,13 +24,16 @@ df = df[(df['TOTAL_ORDERS'] >= 0) &
         (df['LATEST_ORDER_DATE'] >= df['FIRST_ORDER_DATE'])]
 print(f"Dropped {initial_rows - df.shape[0]} rows due to negative values/invalid dates.")
 
-# Making sure all entries of Customer ID are unique and only the most recent one counts 
+# Making sure all entries of Customer ID are unique, 
 initial_rows = df.shape[0]
 df = df.sort_values(by='LATEST_ORDER_DATE', ascending=False)
 df = df.drop_duplicates(subset=['CustomerID'], keep='first')
 print(f"Dropped {initial_rows - df.shape[0]} duplicate rows.")
 
-# Type Conversions in Pandas. Unfortunately deppending on the app they might still be read as wrong data type, depends on setting of the app
+#  Drop index because we already use the ID as a unique identifier and the index is redundant. We dont need it for the data analysis
+if 'index' in df.columns:
+    df = df.drop(columns=['index'])
+# Type Conversions in Pandas. (Unfortunately deppending on the reader app they might still be read as wrong data type, depends on setting of the app)
 df['FIRST_ORDER_DATE'] = pd.to_datetime(df['FIRST_ORDER_DATE'])
 df['LATEST_ORDER_DATE'] = pd.to_datetime(df['LATEST_ORDER_DATE'])
 
@@ -55,20 +53,19 @@ float_cols = [
     'TIME_0000_0600_REVENUE', 'TIME_0601_1200_REVENUE', 'TIME_1200_1800_REVENUE', 
     'TIME_1801_2359_REVENUE'
 ]
-#fillna not necessary sincewe already filter empty values, but good to keep around 
 for col in int_cols:
-    df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0).astype(int)
+    df[col] = pd.to_numeric(df[col], errors='coerce').fillna(df[col].median()).astype(int)
 
 for col in float_cols:
-    df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0.0).astype(float)
+    df[col] = pd.to_numeric(df[col], errors='coerce').fillna(df[col].median()).astype(float)
 
 #saving to a completely new csv file (the old one is kept as a backup) 
 # Reset and Final Save. Using sep=';' instead of ',' is the "European Excel" fix, because , often used as decimal separator.
 #  Using ',' is good for the Extreme CSV app, and I am using it
 #date format used is international standard (but default for pandas, and most csv readers, thre's actually no need to change it)
 df = df.reset_index(drop=True)
-df.to_csv('final_cleaned_sales.csv', index=False, sep=',', encoding='utf-8-sig', date_format='%Y-%m-%d')
+df.to_csv('final_cleaned_sales.csv', index=False, sep=';', encoding='utf-8-sig', date_format='%Y-%m-%d')
 
-#making sure operations fibnished
+#making sure operations are finished
 
 print("Cleanup complete. Saved to 'final_cleaned_sales.csv'.")
