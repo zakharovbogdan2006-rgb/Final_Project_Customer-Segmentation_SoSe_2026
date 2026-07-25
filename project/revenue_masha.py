@@ -5,9 +5,11 @@ scenarios = ['Current State', '10% Return', '30% Return', '50% Return']
 revenue = [0.0, 0.1, 0.3, 0.5]
 plt.figure(figsize=(10, 6), facecolor='white')
 tum_blue = '#005293'
-plt.plot(scenarios, revenue, color=tum_blue, marker='o', linewidth=2.5, markersize=8, label='Revenue')
+plt.plot(scenarios, revenue, color=tum_blue, marker='o',
+         linewidth=2.5, markersize=8, label='Revenue')
 
-plt.title('Revenue Recovery Projection', fontsize=16, fontweight='bold', pad=20)
+plt.title('Revenue Recovery Projection',
+          fontsize=16, fontweight='bold', pad=20)
 plt.ylabel('Revenue (in Millions €)', fontsize=12, labelpad=10)
 plt.xlabel('Return Scenarios', fontsize=12, labelpad=10)
 

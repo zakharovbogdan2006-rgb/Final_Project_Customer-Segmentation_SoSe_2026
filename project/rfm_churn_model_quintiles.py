@@ -9,7 +9,8 @@ DATA_PATH = r"C:\Users\zakha\Downloads\salse.csv"
 SUMMARY_PATH = "potential_churn_cluster_summary.csv"
 RFM_FEATURES = ["Recency", "Monetary", "Frequency"]
 
-def prep_clust(data): #from RFM_calculation.py
+
+def prep_clust(data):  # from RFM_calculation.py
     data_T = data.T
     days = data_T.loc["DAYSSINCELASTORDER"]
     revenue = data_T.loc["REVENUE"]
@@ -17,14 +18,17 @@ def prep_clust(data): #from RFM_calculation.py
     return pd.DataFrame({
         "Recency": pd.qcut(days.rank(method="first"), 5, labels=[5, 4, 3, 2, 1]),
         "Monetary": pd.qcut(revenue.rank(method="first"), 5, labels=[1, 2, 3, 4, 5]),
-        "Frequency": pd.qcut(orders.rank(method="first"), 5, labels=[1, 2, 3, 4, 5]),})
+        "Frequency": pd.qcut(orders.rank(method="first"), 5, labels=[1, 2, 3, 4, 5]), })
+
 
 def clusterisation(d):
     d = d.copy()
-    scaled =d[RFM_FEATURES]
-    model = KMeans(n_clusters=4, random_state=42, n_init=100) #this number of clucters og clusters results in the best accuracy and fits into RFM logic
+    scaled = d[RFM_FEATURES]
+    # this number of clucters og clusters results in the best accuracy and fits into RFM logic
+    model = KMeans(n_clusters=4, random_state=42, n_init=100)
     d["Cluster"] = model.fit_predict(scaled)
     return d
+
 
 def prepare_data(data):
     for col in data.columns:
@@ -35,15 +39,16 @@ def prepare_data(data):
 
     return data
 
+
 def create_churn(data):
     """this is generally a proposition of a churn, becuase it is impossible to calculate "real" churn rate on the data provideed"""
-    days_q80 = data["DAYSSINCELASTORDER"].quantile(0.80) 
+    days_q80 = data["DAYSSINCELASTORDER"].quantile(0.80)
     orders_q20 = data["TOTAL_ORDERS"].quantile(0.20)
     revenue_q20 = data["REVENUE"].quantile(0.20)
     # all three must be satisfied
     data["CHURN"] = ((data["DAYSSINCELASTORDER"] >= days_q80)
-    & (data["TOTAL_ORDERS"] <= orders_q20) 
-    & (data["REVENUE"] <= revenue_q20))
+                     & (data["TOTAL_ORDERS"] <= orders_q20)
+                     & (data["REVENUE"] <= revenue_q20))
 
     print(f"DAYSSINCELASTORDER >= {days_q80:.2f}")
     print(f"TOTAL_ORDERS <= {orders_q20:.2f}")
@@ -51,10 +56,11 @@ def create_churn(data):
     print(f"Клиентов по правилу: {data['CHURN'].sum()}")
     return data
 
+
 def train_model(data):
     excl = [
-        "index","CustomerID", "FIRST_ORDER_DATE", "LATEST_ORDER_DATE", "DAYSSINCELASTORDER",
-        "TOTAL_ORDERS", "REVENUE", "CHURN", "Cluster", "Recency", "Frequency","Monetary"]
+        "index", "CustomerID", "FIRST_ORDER_DATE", "LATEST_ORDER_DATE", "DAYSSINCELASTORDER",
+        "TOTAL_ORDERS", "REVENUE", "CHURN", "Cluster", "Recency", "Frequency", "Monetary"]
     n_cols = data.select_dtypes(include="number").columns
     features = []
     for col in n_cols:
@@ -63,19 +69,25 @@ def train_model(data):
 
     x = data[features]
     y = data["CHURN"]
-    #test_size to check, whether the model works good
-    x_train, x_test, y_train, y_test = train_test_split(x,y, test_size=0.2,random_state=42,stratify=y)
-    scaler = StandardScaler() #initialize
+    # test_size to check, whether the model works good
+    x_train, x_test, y_train, y_test = train_test_split(
+        x, y, test_size=0.2, random_state=42, stratify=y)
+    scaler = StandardScaler()  # initialize
     x_train = scaler.fit_transform(x_train)
     x_test = scaler.transform(x_test)
-    model = LogisticRegression(max_iter=2000,class_weight="balanced", random_state=42) #"balanced" to cope with heterogeneous data
+    # "balanced" to cope with heterogeneous data
+    model = LogisticRegression(
+        max_iter=2000, class_weight="balanced", random_state=42)
     model.fit(x_train, y_train)
     pred = model.predict(x_test)
 
-    accuracy = accuracy_score(y_test, pred) # Compute the proportion of correct predictions
-    precision = precision_score(y_test, pred) #Precision measures how many predicted positive cases are actually positive
-    recall = recall_score(y_test, pred) #Recall measures how many actual positive cases are correctly identified.
-    f1 = f1_score(y_test, pred) #harmonic average of precision and recall
+    # Compute the proportion of correct predictions
+    accuracy = accuracy_score(y_test, pred)
+    # Precision measures how many predicted positive cases are actually positive
+    precision = precision_score(y_test, pred)
+    # Recall measures how many actual positive cases are correctly identified.
+    recall = recall_score(y_test, pred)
+    f1 = f1_score(y_test, pred)  # harmonic average of precision and recall
 
     print("\n--- quality ---")
     print("Accuracy:", round(accuracy, 3))
@@ -91,7 +103,9 @@ def train_model(data):
     data["PREDICTED_CHURN"] = model.predict(all_x)
 
     return data
-#Dispaly to console and get the csv
+# Dispaly to console and get the csv
+
+
 def main():
     data = prepare_data(pd.read_csv(DATA_PATH))
     clusters = clusterisation(prep_clust(data))
@@ -101,9 +115,11 @@ def main():
     total = len(data)
     churn_total = int(data["PREDICTED_CHURN"].sum())
     summary = data.groupby("Cluster")
-    summary = summary.agg( TOTAL_CLIENTS=("CustomerID", "count"), CHURN_CLIENTS=("PREDICTED_CHURN", "sum"),)
+    summary = summary.agg(TOTAL_CLIENTS=("CustomerID", "count"),
+                          CHURN_CLIENTS=("PREDICTED_CHURN", "sum"),)
     summary = summary.reset_index()
-    summary["CHURN_SHARE_IN_CLUSTER"] = (summary["CHURN_CLIENTS"] / summary["TOTAL_CLIENTS"])
+    summary["CHURN_SHARE_IN_CLUSTER"] = (
+        summary["CHURN_CLIENTS"] / summary["TOTAL_CLIENTS"])
     summary["SHARE_OF_ALL_CHURN"] = (summary["CHURN_CLIENTS"] / churn_total)
 
     print("\n--- Итоговый прогноз ---")
@@ -115,6 +131,7 @@ def main():
         shown[col] = shown[col].map(lambda value: f"{value:.2%}")
     print("\n", shown.to_string(index=False))
     summary.to_csv(SUMMARY_PATH, index=False)
+
 
 if __name__ == "__main__":
     main()

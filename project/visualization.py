@@ -4,57 +4,66 @@ from matplotlib.lines import Line2D
 from sklearn.decomposition import PCA
 from RFM_calculation import build_clusters
 ''' TO RUN THIS FILE AND GET THE PUCTURE YOU NEED TO RUN "python visualization" IN TERMINAL IN THE CORRECT DIRECTORY'''
+
+
 def plot_pca(ax, result, x_scaled, model, title):
     labels = result["Cluster"].to_numpy()
-    pca = PCA(n_components=2) #initialization
+    pca = PCA(n_components=2)  # initialization
     p_pca = pca.fit_transform(x_scaled)
-    centr_pca = pca.transform(model.cluster_centers_) #centroids also should be transformed with pca
+    # centroids also should be transformed with pca
+    centr_pca = pca.transform(model.cluster_centers_)
     p = 0.5
-    x_min = p_pca[:, 0].min() - p #make the square of the picture
+    x_min = p_pca[:, 0].min() - p  # make the square of the picture
     x_max = p_pca[:, 0].max() + p
     y_min = p_pca[:, 1].min() - p
     y_max = p_pca[:, 1].max() + p
-    x_vals = np.linspace(x_min, x_max, 500) #fill the space with points (500)
+    x_vals = np.linspace(x_min, x_max, 500)  # fill the space with points (500)
     y_vals = np.linspace(y_min, y_max, 500)
 
-    xx, yy = np.meshgrid(x_vals, y_vals) #make grid
-    grid_pca = np.column_stack((xx.ravel(), yy.ravel())) #transform data, i.e. make one array from two
+    xx, yy = np.meshgrid(x_vals, y_vals)  # make grid
+    # transform data, i.e. make one array from two
+    grid_pca = np.column_stack((xx.ravel(), yy.ravel()))
     grid_or = pca.inverse_transform(grid_pca)
     grid_labels = model.predict(grid_or).reshape(xx.shape)
 
-    ax.contourf(xx, yy, grid_labels, levels=np.arange(model.n_clusters + 1) - 0.5,cmap="viridis",alpha=0.2,) #plot dotes
-    ax.contour(xx,yy, grid_labels, levels=np.arange(model.n_clusters - 1) + 0.5, colors="black", linewidths=1.5,) #plot centroids
-    ax.scatter(p_pca[:, 0],p_pca[:, 1],c=labels, cmap="viridis", s=8, alpha=0.35, edgecolors="none",) #fill with color
+    ax.contourf(xx, yy, grid_labels, levels=np.arange(
+        model.n_clusters + 1) - 0.5, cmap="viridis", alpha=0.2,)  # plot dotes
+    ax.contour(xx, yy, grid_labels, levels=np.arange(
+        model.n_clusters - 1) + 0.5, colors="black", linewidths=1.5,)  # plot centroids
+    ax.scatter(p_pca[:, 0], p_pca[:, 1], c=labels, cmap="viridis",
+               s=8, alpha=0.35, edgecolors="none",)  # fill with color
     ax.scatter(centr_pca[:, 0], centr_pca[:, 1], c=np.arange(len(centr_pca)), cmap="viridis",
-        marker="^", s=35, edgecolors="black", linewidths=1, label="Centroids", zorder=10, ) #borders between clusters
+               # borders between clusters
+               marker="^", s=35, edgecolors="black", linewidths=1, label="Centroids", zorder=10, )
     variance = pca.explained_variance_ratio_.sum()
     ax.set_title(f"{title}\nPCA saved {variance:.1%} of variance")
     ax.set_xlabel("PCA 1")
     ax.set_ylabel("PCA 2")
     legend_elements = [
-        Line2D([0], [0], marker="o" , color="w", label=f"Cluster {i}",
-        markerfacecolor=plt.cm.viridis(i / (model.n_clusters - 1)), markersize=8)
+        Line2D([0], [0], marker="o", color="w", label=f"Cluster {i}",
+               markerfacecolor=plt.cm.viridis(i / (model.n_clusters - 1)), markersize=8)
         for i in range(model.n_clusters)]
 
     legend_elements.append(
-    Line2D([0], [0], marker="^", color="w", label="Centroids",
-        markerfacecolor="black", markeredgecolor="black", markersize=10 ))
+        Line2D([0], [0], marker="^", color="w", label="Centroids",
+               markerfacecolor="black", markeredgecolor="black", markersize=10))
 
     plt.legend(handles=legend_elements)
-    
+
 
 def show_visualizations():
-    clusters = build_clusters() #build clusters from file RFM_calculation
+    clusters = build_clusters()  # build clusters from file RFM_calculation
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 7))
     scores_result, scores_x, scores_model, _ = clusters["scores"]
-    plot_pca( axes[0], scores_result, scores_x, scores_model, "RFM scores from 1 to 5",)
+    plot_pca(axes[0], scores_result, scores_x,
+             scores_model, "RFM scores from 1 to 5",)
     raw_result, raw_x, raw_model, _ = clusters["raw"]
-    plot_pca(axes[1], raw_result, raw_x, raw_model,"Raw RFM data",)
+    plot_pca(axes[1], raw_result, raw_x, raw_model, "Raw RFM data",)
 
     plt.tight_layout()
     plt.show()
 
 
 if __name__ == "__main__":
-    show_visualizations() # run visualizations only when this script is executed
+    show_visualizations()  # run visualizations only when this script is executed
