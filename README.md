@@ -1,18 +1,25 @@
-# Final_Project_Customer-Segmentation_SoSe_2026
-Customer Segmentation and Churn Prediction Using RFM Analysis
-Dataset: Sales.csv
-A retail company notices that many customers stop purchasing after a few orders, but
-they do not know which customers are likely to leave. Students will analyze transaction
-history and customer behavior to build a churn prediction model using purchase
-frequency, recency, and spending patterns (RFM Model). Expected insights include
-identifying early warning signs of customer loss and suggesting retention strategies for
-different customer groups.
-Final Project Deliverables:
-1. Data cleaning report
-2. Exploratory Data Analysis (EDA) report
-3. RFM calculation
-4. Customer segmentation
-5. Visualization dashboard
-6. Predictive model or clustering extension
-7. Marketing recommendations
-8. Executive summary
+# Customer segmentation with RFM
+
+This project groups retail customers by recency, order frequency and revenue. It produces four descriptive customer segments and a chart for a business-facing review.
+
+## Run it
+
+The repository can be evaluated without the original dataset:
+
+```bash
+cd project
+python -m pip install -r requirements.txt
+python pipeline.py --generate-demo --output reports
+```
+
+For a permitted dataset, supply a CSV containing `CustomerID`, `DAYSSINCELASTORDER`, `TOTAL_ORDERS` and `REVENUE`:
+
+```bash
+python pipeline.py --input path/to/sales.csv --output reports
+```
+
+Outputs are `customer_segments.csv`, `segment_summary.csv` and `segments.png`. The synthetic dataset is deterministic, so the demonstration is reproducible. Docker starts the same demo pipeline with `docker build -t customer-segmentation project` and `docker run --rm -v ${PWD}/reports:/app/reports customer-segmentation`.
+
+## Scope and interpretation
+
+The original transaction data cannot be published. The included demo is synthetic and exists only to demonstrate the pipeline. The segments are descriptive RFM clusters, not validated churn predictions. A historical churn target and a time-based holdout set would be required before reporting prediction quality.
